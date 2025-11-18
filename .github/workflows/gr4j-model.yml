@@ -58,7 +58,7 @@ jobs:
         BASIN: ${{ inputs.basin }}
         MEAN_QOUT: ${{ inputs.mean_qout }}
       run: |
-        python main.py
+        python main_api.py
         
     - name: Upload results
       uses: actions/upload-artifact@v4

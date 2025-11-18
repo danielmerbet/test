@@ -1,214 +1,82 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GR4J Model Runner</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .container {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        input, select, textarea {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        button {
-            background-color: #2ea44f;
-            color: white;
-            padding: 12px 30px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        button:hover {
-            background-color: #2c974b;
-        }
-        .tab {
-            overflow: hidden;
-            border: 1px solid #ccc;
-            background-color: #f1f1f1;
-            border-radius: 4px;
-        }
-        .tab button {
-            background-color: inherit;
-            float: left;
-            border: none;
-            outline: none;
-            cursor: pointer;
-            padding: 14px 16px;
-            transition: 0.3s;
-            color: #333;
-        }
-        .tab button:hover {
-            background-color: #ddd;
-        }
-        .tab button.active {
-            background-color: #ccc;
-        }
-        .tabcontent {
-            display: none;
-            padding: 20px 0;
-            border-top: none;
-        }
-        .results {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
-            display: none;
-        }
-        .file-info {
-            font-size: 14px;
-            color: #666;
-            margin-top: 5px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🏞️ Digital Twin for Ter River and Sau-Susqueda Reservoirs</h1>
-        <p>Run a hydrologic model with soil moisture assimilation using your input parameters.</p>
+name: GR4J Model with Results API
 
-        <form id="modelForm">
-            <div class="form-group">
-                <label for="basin">Basin Name:</label>
-                <input type="text" id="basin" name="basin" value="ter" required>
-            </div>
-<!--
-            <div class="form-group">
-                <label for="calibrate">Run Calibration:</label>
-                <select id="calibrate" name="calibrate">
-                    <option value="false">Use pre-calibrated parameters</option>
-                    <option value="true">Run calibration</option>
-                </select>
-            </div>
--->
-            <div class="tab">
-                <button type="button" class="tablinks active" onclick="openTab(event, 'MeanQout')">Constant Qout</button>
-                <button type="button" class="tablinks" onclick="openTab(event, 'CsvQout')">CSV File Qout</button>
-            </div>
+on:
+  workflow_dispatch:
+    inputs:
+      basin:
+        description: 'Basin name'
+        required: true
+        type: string
+        default: 'ter'
+      mean_qout:
+        description: 'Mean Qout value (m³/s)'
+        required: false
+        type: string
+      qout_csv_file:
+        description: 'Qout CSV file content'
+        required: false
+        type: string
+      calibrate:
+        description: 'Run calibration'
+        required: false
+        type: boolean
+        default: false
 
-            <div id="MeanQout" class="tabcontent" style="display: block;">
-                <div class="form-group">
-                    <label for="mean_qout">Mean Qout Value (m³/s):</label>
-                    <input type="number" id="mean_qout" name="mean_qout" step="0.1" value="10.0">
-                    <div class="file-info">This value will be used for all time steps</div>
-                </div>
-            </div>
-
-            <div id="CsvQout" class="tabcontent">
-                <div class="form-group">
-                    <label for="qout_csv">Upload Qout CSV File:</label>
-                    <input type="file" id="qout_csv" name="qout_csv" accept=".csv">
-                    <div class="file-info">CSV should contain a 'Qout' column with values in m³/s</div>
-                </div>
-            </div>
-<!--
-            <div class="form-group">
-                <label for="email">Email for results (optional):</label>
-                <input type="email" id="email" name="email" placeholder="your@email.com">
-            </div>
--->
-            <button type="submit" id="runButton">Run Model</button>
-        </form>
-
-        <div id="results" class="results">
-            <h3>📊 Results</h3>
-            <div id="resultsContent"></div>
-        </div>
-    </div>
-
-    <script>
-        function openTab(evt, tabName) {
-            var i, tabcontent, tablinks;
-            tabcontent = document.getElementsByClassName("tabcontent");
-            for (i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].style.display = "none";
-            }
-            tablinks = document.getElementsByClassName("tablinks");
-            for (i = 0; i < tablinks.length; i++) {
-                tablinks[i].className = tablinks[i].className.replace(" active", "");
-            }
-            document.getElementById(tabName).style.display = "block";
-            evt.currentTarget.className += " active";
-        }
-
-        document.getElementById('modelForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const runButton = document.getElementById('runButton');
-            const results = document.getElementById('results');
-            const resultsContent = document.getElementById('resultsContent');
-            
-            runButton.textContent = 'Running Model...';
-            runButton.disabled = true;
-            results.style.display = 'none';
-
-            const formData = new FormData();
-            formData.append('basin', document.getElementById('basin').value);
-            formData.append('calibrate', document.getElementById('calibrate').value);
-            formData.append('mean_qout', document.getElementById('mean_qout').value);
-            formData.append('email', document.getElementById('email').value);
-
-            // Handle file upload
-            const csvFile = document.getElementById('qout_csv').files[0];
-            if (csvFile) {
-                formData.append('qout_csv', csvFile);
-            }
-
-            try {
-                const response = await fetch('/.netlify/functions/run-model', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const result = await response.json();
-
-                if (response.ok) {
-                    resultsContent.innerHTML = `
-                        <p>✅ Model run completed successfully!</p>
-                        <p><strong>Workflow ID:</strong> ${result.workflow_id}</p>
-                        <p><strong>Status URL:</strong> <a href="${result.status_url}" target="_blank">${result.status_url}</a></p>
-                        <p>Results will be available in the GitHub Actions tab in a few minutes.</p>
-                        ${result.email ? `<p>Results will be sent to: ${result.email}</p>` : ''}
-                    `;
-                } else {
-                    resultsContent.innerHTML = `
-                        <p>❌ Error: ${result.error}</p>
-                    `;
-                }
-            } catch (error) {
-                resultsContent.innerHTML = `
-                    <p>❌ Network error: ${error.message}</p>
-                `;
-            }
-
-            results.style.display = 'block';
-            runButton.textContent = 'Run Model';
-            runButton.disabled = false;
-        });
-    </script>
-</body>
-</html>
+jobs:
+  run-model:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pandas matplotlib numpy scipy flask jsonify
+        pip install webargs flask-cors
+        pip install plotly kaleido  # For interactive plots
+        
+    - name: Create input files
+      run: |
+        mkdir -p inputs
+        if [ -n "${{ inputs.qout_csv_file }}" ]; then
+          echo "${{ inputs.qout_csv_file }}" > inputs/qout_values.csv
+        fi
+        
+    - name: Run GR4J model with API
+      env:
+        BASIN: ${{ inputs.basin }}
+        MEAN_QOUT: ${{ inputs.mean_qout }}
+        CALIBRATE: ${{ inputs.calibrate }}
+      run: |
+        python gr4j_api.py &
+        sleep 5
+        curl -X POST http://localhost:5000/run-model \
+          -H "Content-Type: application/json" \
+          -d '{
+            "basin": "${{ inputs.basin }}",
+            "mean_qout": "${{ inputs.mean_qout }}",
+            "calibrate": ${{ inputs.calibrate }}
+          }'
+        
+    - name: Upload results
+      uses: actions/upload-artifact@v4
+      with:
+        name: gr4j-results
+        path: |
+          output/
+          results.json
+        retention-days: 30
+        
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./output
+        keep_files: true
