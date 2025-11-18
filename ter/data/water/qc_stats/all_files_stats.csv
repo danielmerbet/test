@@ -1,0 +1,12 @@
+n,n_na,min,max,mean,median,sd,file
+147,0,8.7,28.5,17.879591836734694,17.5,4.623228113388529,~/Documents/NEREIDA/ter/data/water/coast/temp_aca_coast_ter.csv
+143,0,0.0527,113.352,15.979843902097903,5.9551,22.41119613705401,~/Documents/NEREIDA/ter/data/water/coast/no3_aca_coast_ter.csv
+274,0,0.9,86,10.784160583941606,8.1,8.284230806902377,~/Documents/NEREIDA/ter/data/water/predam/no3_aca_predam_ter.csv
+203,0,1,30,14.526995073891625,14.3,6.834873472213201,~/Documents/NEREIDA/ter/data/water/predam/temp_aca_predam_ter.csv
+1873,1,0.556816977,214.672046687,8.192453409837073,5.2090953965,11.850256514969901,~/Documents/NEREIDA/ter/data/water/predam/q_aca_predam_ter.csv
+183,0,1.8,19,7.611803278688525,7,2.9446372422695157,~/Documents/NEREIDA/ter/data/water/postdam/no3_aca_postdam_ter.csv
+117,0,6.4,27.6,13.22948717948718,13,3.728814835785708,~/Documents/NEREIDA/ter/data/water/postdam/temp_aca_postdam_ter.csv
+6843,0,0,725.579119586,8.586305566724828,5.711,15.277507656693535,~/Documents/NEREIDA/ter/data/water/postdam/q_aca_postdam_ter.csv
+235,0,2,29.7,11.092085106382978,10.5,4.901813321504584,~/Documents/NEREIDA/ter/data/water/outlet/no3_aca_outlet_ter.csv
+237,0,4.1,29,16.123502109704642,16,5.946560889461387,~/Documents/NEREIDA/ter/data/water/outlet/temp_aca_outlet_ter.csv
+6583,0,0.515873476,579.601580726,10.430149391844296,4.692527129,24.05610411686223,~/Documents/NEREIDA/ter/data/water/outlet/q_aca_outlet_ter.csv

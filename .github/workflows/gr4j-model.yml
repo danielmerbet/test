@@ -1,0 +1,44 @@
+name: GR4J Model Simulation
+
+on:
+  workflow_dispatch:
+    inputs:
+      basin_name:
+        description: 'Basin name'
+        required: true
+        default: 'ter'
+        type: string
+      mean_qout:
+        description: 'Mean Qout value (m³/s)'
+        required: false
+        type: number
+      qout_csv_file:
+        description: 'CSV file with Qout values (optional)'
+        required: false
+        type: string
+
+jobs:
+  run-model:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pandas matplotlib numpy scipy
+        
+    - name: Run GR4J model
+      env:
+        BASIN: ${{ inputs.basin_name }}
+        MEAN_QOUT: ${{ inputs.mean_qout }}
+        QOUT_CSV: ${{ inputs.qout_csv_file }}
+      run: |
+        python main.py
