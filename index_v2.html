@@ -1,4 +1,4 @@
-name: GR4J Model via Web Interface
+name: GR4J Model with Results API
 
 on:
   workflow_dispatch:
@@ -21,10 +21,6 @@ on:
         required: false
         type: boolean
         default: false
-      user_email:
-        description: 'User email for results'
-        required: false
-        type: string
 
 jobs:
   run-model:
@@ -42,23 +38,32 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pandas matplotlib numpy scipy requests
+        pip install pandas matplotlib numpy scipy flask jsonify
+        pip install webargs flask-cors
+        pip install plotly kaleido  # For interactive plots
         
     - name: Create input files
       run: |
         mkdir -p inputs
-        # Create Qout CSV file if provided
         if [ -n "${{ inputs.qout_csv_file }}" ]; then
           echo "${{ inputs.qout_csv_file }}" > inputs/qout_values.csv
-          echo "Created Qout CSV file"
         fi
         
-    - name: Run GR4J model
+    - name: Run GR4J model with API
       env:
         BASIN: ${{ inputs.basin }}
         MEAN_QOUT: ${{ inputs.mean_qout }}
+        CALIBRATE: ${{ inputs.calibrate }}
       run: |
-        python main.py
+        python gr4j_api.py &
+        sleep 5
+        curl -X POST http://localhost:5000/run-model \
+          -H "Content-Type: application/json" \
+          -d '{
+            "basin": "${{ inputs.basin }}",
+            "mean_qout": "${{ inputs.mean_qout }}",
+            "calibrate": ${{ inputs.calibrate }}
+          }'
         
     - name: Upload results
       uses: actions/upload-artifact@v4
@@ -66,20 +71,12 @@ jobs:
         name: gr4j-results
         path: |
           output/
-          inputs/
+          results.json
         retention-days: 30
         
-
-    - name: commit files
-      run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add -A
-          git commit -m "auto commit $(date)" || echo "No changes to commit"
-          
-    - name: push changes
-      uses: ad-m/github-push-action@v0.6.0
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
       with:
-          github_token: ${{ secrets.PAT_TOKEN }}
-          branch: main 
-        
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./output
+        keep_files: true
